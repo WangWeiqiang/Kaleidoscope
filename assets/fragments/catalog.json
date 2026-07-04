@@ -17,6 +17,7 @@
           "size": 1,
           "opacity": 0.82,
           "weight": 1,
+          "matType": 0,
           "uv": [
             0,
             0,
@@ -32,6 +33,7 @@
           "size": 1,
           "opacity": 0.82,
           "weight": 1,
+          "matType": 0,
           "uv": [
             200,
             0,
@@ -47,6 +49,7 @@
           "size": 1,
           "opacity": 0.82,
           "weight": 1,
+          "matType": 0,
           "uv": [
             400,
             0,
@@ -62,6 +65,7 @@
           "size": 1,
           "opacity": 0.82,
           "weight": 1,
+          "matType": 0,
           "uv": [
             600,
             0,
@@ -77,6 +81,7 @@
           "size": 1,
           "opacity": 0.82,
           "weight": 1,
+          "matType": 0,
           "uv": [
             800,
             0,
@@ -98,7 +103,8 @@
           "file": "paper/blue.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.4,
+          "matType": 1,
           "uv": [
             0,
             200,
@@ -113,7 +119,8 @@
           "file": "paper/kraft.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.4,
+          "matType": 1,
           "uv": [
             200,
             200,
@@ -128,7 +135,8 @@
           "file": "paper/red.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.4,
+          "matType": 1,
           "uv": [
             400,
             200,
@@ -143,7 +151,8 @@
           "file": "paper/white.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.4,
+          "matType": 1,
           "uv": [
             600,
             200,
@@ -158,7 +167,8 @@
           "file": "paper/yellow.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.4,
+          "matType": 1,
           "uv": [
             800,
             200,
@@ -180,7 +190,8 @@
           "file": "metal/copper.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 1.35,
+          "matType": 2,
           "uv": [
             0,
             400,
@@ -195,7 +206,8 @@
           "file": "metal/gold.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 1.35,
+          "matType": 2,
           "uv": [
             200,
             400,
@@ -210,7 +222,8 @@
           "file": "metal/silver.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 1.35,
+          "matType": 2,
           "uv": [
             400,
             400,
@@ -225,7 +238,8 @@
           "file": "metal/steel.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 1.35,
+          "matType": 2,
           "uv": [
             600,
             400,
@@ -247,7 +261,8 @@
           "file": "plastic/cyan.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.7,
+          "matType": 3,
           "uv": [
             800,
             400,
@@ -262,7 +277,8 @@
           "file": "plastic/lime.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.7,
+          "matType": 3,
           "uv": [
             0,
             600,
@@ -277,7 +293,8 @@
           "file": "plastic/pink.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.7,
+          "matType": 3,
           "uv": [
             200,
             600,
@@ -292,7 +309,8 @@
           "file": "plastic/purple.png",
           "size": 1,
           "opacity": 1,
-          "weight": 1,
+          "weight": 0.7,
+          "matType": 3,
           "uv": [
             400,
             600,

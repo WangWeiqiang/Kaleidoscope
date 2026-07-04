@@ -10,6 +10,8 @@ export interface FragmentItem {
   size: number;
   opacity: number;
   weight: number;
+  /** material index for the lighting shader: 0 glass · 1 paper · 2 metal · 3 plastic */
+  matType: number;
   /** atlas sub-rect in px: [x, y, w, h] */
   uv: [number, number, number, number];
 }
@@ -25,6 +27,9 @@ export const ATLAS_SIZE = { width: 1000, height: 800 };
 /** The packed atlas image (all fragments) — used by the kaleidoscope shader. */
 export const FRAGMENT_ATLAS = require('../../assets/fragments/atlas.png');
 
+/** Baked material atlas (RG=normal, B=thickness) — same layout as the atlas. */
+export const FRAGMENT_ATLAS_MAT = require('../../assets/fragments/atlas-mat.png');
+
 export const FRAGMENT_CATALOG: FragmentCategory[] = [
   {
     "id": "glass",
@@ -39,6 +44,7 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "size": 1,
         "opacity": 0.82,
         "weight": 1,
+        "matType": 0,
         "uv": [
           0,
           0,
@@ -54,6 +60,7 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "size": 1,
         "opacity": 0.82,
         "weight": 1,
+        "matType": 0,
         "uv": [
           200,
           0,
@@ -69,6 +76,7 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "size": 1,
         "opacity": 0.82,
         "weight": 1,
+        "matType": 0,
         "uv": [
           400,
           0,
@@ -84,6 +92,7 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "size": 1,
         "opacity": 0.82,
         "weight": 1,
+        "matType": 0,
         "uv": [
           600,
           0,
@@ -99,6 +108,7 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "size": 1,
         "opacity": 0.82,
         "weight": 1,
+        "matType": 0,
         "uv": [
           800,
           0,
@@ -120,7 +130,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "paper/blue.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.4,
+        "matType": 1,
         "uv": [
           0,
           200,
@@ -135,7 +146,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "paper/kraft.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.4,
+        "matType": 1,
         "uv": [
           200,
           200,
@@ -150,7 +162,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "paper/red.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.4,
+        "matType": 1,
         "uv": [
           400,
           200,
@@ -165,7 +178,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "paper/white.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.4,
+        "matType": 1,
         "uv": [
           600,
           200,
@@ -180,7 +194,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "paper/yellow.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.4,
+        "matType": 1,
         "uv": [
           800,
           200,
@@ -202,7 +217,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "metal/copper.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 1.35,
+        "matType": 2,
         "uv": [
           0,
           400,
@@ -217,7 +233,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "metal/gold.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 1.35,
+        "matType": 2,
         "uv": [
           200,
           400,
@@ -232,7 +249,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "metal/silver.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 1.35,
+        "matType": 2,
         "uv": [
           400,
           400,
@@ -247,7 +265,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "metal/steel.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 1.35,
+        "matType": 2,
         "uv": [
           600,
           400,
@@ -269,7 +288,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "plastic/cyan.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.7,
+        "matType": 3,
         "uv": [
           800,
           400,
@@ -284,7 +304,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "plastic/lime.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.7,
+        "matType": 3,
         "uv": [
           0,
           600,
@@ -299,7 +320,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "plastic/pink.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.7,
+        "matType": 3,
         "uv": [
           200,
           600,
@@ -314,7 +336,8 @@ export const FRAGMENT_CATALOG: FragmentCategory[] = [
         "file": "plastic/purple.png",
         "size": 1,
         "opacity": 1,
-        "weight": 1,
+        "weight": 0.7,
+        "matType": 3,
         "uv": [
           400,
           600,

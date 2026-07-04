@@ -14,6 +14,8 @@ function SectionTitle({ children }: { children: string }) {
 export function LeftPanel() {
   const mirrors = useKaleidoscope((s) => s.mirrors);
   const setMirrors = useKaleidoscope((s) => s.setMirrors);
+  const chamber = useKaleidoscope((s) => s.chamber);
+  const setChamber = useKaleidoscope((s) => s.setChamber);
   const fragments = useKaleidoscope((s) => s.fragments);
   const openPicker = useKaleidoscope((s) => s.openPicker);
   const clearFragments = useKaleidoscope((s) => s.clearFragments);
@@ -49,6 +51,33 @@ export function LeftPanel() {
               <Text style={[styles.mirrorLabel, active && styles.labelActive]}>
                 {opt.label}
               </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <SectionTitle>物件仓 · Cell</SectionTitle>
+      <View style={styles.chamberRow}>
+        {(
+          [
+            { id: 'dry', label: '干式', sub: '翻滚崩落' },
+            { id: 'oil', label: '油室', sub: '缓慢漂移' },
+          ] as const
+        ).map((opt) => {
+          const active = chamber === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
+              onPress={() => {
+                setChamber(opt.id);
+                tap();
+              }}
+              style={[styles.chamberCell, active && styles.cellActive]}
+            >
+              <Text style={[styles.mirrorLabel, active && styles.labelActive]}>
+                {opt.label}
+              </Text>
+              <Text style={styles.chamberSub}>{opt.sub}</Text>
             </Pressable>
           );
         })}
@@ -99,6 +128,17 @@ const styles = StyleSheet.create({
     marginBottom: theme.space(1),
   },
   mirrorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(2) },
+  chamberRow: { flexDirection: 'row', gap: theme.space(2) },
+  chamberCell: {
+    flex: 1,
+    paddingVertical: theme.space(2),
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    gap: 2,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  chamberSub: { color: theme.colors.textFaint, fontSize: theme.font.tiny },
   mirrorCell: {
     width: 58,
     paddingVertical: theme.space(2),
