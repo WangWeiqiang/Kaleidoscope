@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Kaleidoscope",
+    "slug": "kaleidoscope",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "./assets/icon.png",
+    "scheme": "kaleidoscope",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#05060a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.kaleidoscope.app",
+      "infoPlist": {
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "NSMotionUsageDescription": "Kaleidoscope uses your device's motion sensors to let you spin and tumble the pattern by tilting or shaking your phone."
+      }
+    },
+    "android": {
+      "package": "com.kaleidoscope.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#05060a"
+      },
+      "permissions": [
+        "android.permission.HIGH_SAMPLING_RATE_SENSORS"
+      ]
+    },
+    "plugins": [
+      "expo-screen-orientation",
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Kaleidoscope uses motion sensors to spin and tumble the pattern as you move your phone."
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1996ff22-972d-462e-acaa-f07e6d81c124"
+      }
+    },
+    "owner": "gamagician"
+  }
+}

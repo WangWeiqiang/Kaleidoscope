@@ -1,0 +1,306 @@
+{
+  "atlas": {
+    "width": 1000,
+    "height": 800
+  },
+  "categories": [
+    {
+      "id": "glass",
+      "label": "玻璃",
+      "en": "Glass",
+      "items": [
+        {
+          "id": "glass-amber",
+          "catId": "glass",
+          "label": "Amber",
+          "file": "glass/amber.png",
+          "size": 1,
+          "opacity": 0.82,
+          "weight": 1,
+          "uv": [
+            0,
+            0,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "glass-clear",
+          "catId": "glass",
+          "label": "Clear",
+          "file": "glass/clear.png",
+          "size": 1,
+          "opacity": 0.82,
+          "weight": 1,
+          "uv": [
+            200,
+            0,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "glass-cobalt",
+          "catId": "glass",
+          "label": "Cobalt",
+          "file": "glass/cobalt.png",
+          "size": 1,
+          "opacity": 0.82,
+          "weight": 1,
+          "uv": [
+            400,
+            0,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "glass-emerald",
+          "catId": "glass",
+          "label": "Emerald",
+          "file": "glass/emerald.png",
+          "size": 1,
+          "opacity": 0.82,
+          "weight": 1,
+          "uv": [
+            600,
+            0,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "glass-rose",
+          "catId": "glass",
+          "label": "Rose",
+          "file": "glass/rose.png",
+          "size": 1,
+          "opacity": 0.82,
+          "weight": 1,
+          "uv": [
+            800,
+            0,
+            200,
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paper",
+      "label": "纸片",
+      "en": "Paper",
+      "items": [
+        {
+          "id": "paper-blue",
+          "catId": "paper",
+          "label": "Blue",
+          "file": "paper/blue.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            0,
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "paper-kraft",
+          "catId": "paper",
+          "label": "Kraft",
+          "file": "paper/kraft.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            200,
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "paper-red",
+          "catId": "paper",
+          "label": "Red",
+          "file": "paper/red.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            400,
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "paper-white",
+          "catId": "paper",
+          "label": "White",
+          "file": "paper/white.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            600,
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "paper-yellow",
+          "catId": "paper",
+          "label": "Yellow",
+          "file": "paper/yellow.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            800,
+            200,
+            200,
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "id": "metal",
+      "label": "金属",
+      "en": "Metal",
+      "items": [
+        {
+          "id": "metal-copper",
+          "catId": "metal",
+          "label": "Copper",
+          "file": "metal/copper.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            0,
+            400,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "metal-gold",
+          "catId": "metal",
+          "label": "Gold",
+          "file": "metal/gold.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            200,
+            400,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "metal-silver",
+          "catId": "metal",
+          "label": "Silver",
+          "file": "metal/silver.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            400,
+            400,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "metal-steel",
+          "catId": "metal",
+          "label": "Steel",
+          "file": "metal/steel.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            600,
+            400,
+            200,
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plastic",
+      "label": "塑料",
+      "en": "Plastic",
+      "items": [
+        {
+          "id": "plastic-cyan",
+          "catId": "plastic",
+          "label": "Cyan",
+          "file": "plastic/cyan.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            800,
+            400,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "plastic-lime",
+          "catId": "plastic",
+          "label": "Lime",
+          "file": "plastic/lime.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            0,
+            600,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "plastic-pink",
+          "catId": "plastic",
+          "label": "Pink",
+          "file": "plastic/pink.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            200,
+            600,
+            200,
+            200
+          ]
+        },
+        {
+          "id": "plastic-purple",
+          "catId": "plastic",
+          "label": "Purple",
+          "file": "plastic/purple.png",
+          "size": 1,
+          "opacity": 1,
+          "weight": 1,
+          "uv": [
+            400,
+            600,
+            200,
+            200
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+[
+  { "id": "glass",   "label": "玻璃", "en": "Glass" },
+  { "id": "paper",   "label": "纸片", "en": "Paper" },
+  { "id": "metal",   "label": "金属", "en": "Metal" },
+  { "id": "plastic", "label": "塑料", "en": "Plastic" }
+]
