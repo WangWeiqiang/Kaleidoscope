@@ -44,13 +44,10 @@ export function LeftPanel() {
               <PolygonGlyph
                 sides={opt.sides}
                 size={32}
-                color={active ? theme.colors.accent : theme.colors.textDim}
+                color={active ? theme.colors.accent : 'rgba(255,255,255,0.55)'}
                 fill={active ? theme.colors.active : undefined}
                 strokeWidth={2}
               />
-              <Text style={[styles.mirrorLabel, active && styles.labelActive]}>
-                {opt.label}
-              </Text>
             </Pressable>
           );
         })}
@@ -140,11 +137,10 @@ const styles = StyleSheet.create({
   },
   chamberSub: { color: theme.colors.textFaint, fontSize: theme.font.tiny },
   mirrorCell: {
-    width: 58,
+    width: 48,
     paddingVertical: theme.space(2),
     borderRadius: theme.radius.md,
     alignItems: 'center',
-    gap: 4,
     borderWidth: 1,
     borderColor: 'transparent',
   },

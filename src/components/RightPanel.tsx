@@ -6,17 +6,18 @@ import { theme } from '@/theme';
 import { useKaleidoscope, type DriveMode } from '@/state/store';
 import type { Drive } from '@/hooks/useDrive';
 import { RotaryKnob } from './RotaryKnob';
+import { MotionIllustration } from './MotionIllustration';
 
-const MODES: { id: DriveMode; label: string; en: string; icon: string }[] = [
-  { id: 'knob', label: '旋钮', en: 'Knob', icon: '⟳' },
-  { id: 'tilt', label: '转动', en: 'Tilt', icon: '⤿' },
-  { id: 'shake', label: '晃动', en: 'Shake', icon: '⇄' },
+const MODES: { id: DriveMode; label: string }[] = [
+  { id: 'knob', label: '旋钮' },
+  { id: 'tilt', label: '转动' },
+  { id: 'shake', label: '晃动' },
 ];
 
 const HINT: Record<DriveMode, string> = {
-  knob: '拨动旋钮转动碎片\n停下即定格\nFlick to turn · freezes when still',
-  tilt: '转动手机驱动旋转\n静止即定格\nRotate your phone',
-  shake: '晃动手机翻滚碎片\n静止即定格\nShake to tumble',
+  knob: '拨动旋钮转动碎片\n停下即定格',
+  tilt: '沿屏幕平面转动手机\n静止即定格',
+  shake: '晃动手机翻滚碎片\n静止即定格',
 };
 
 interface Props {
@@ -32,7 +33,8 @@ export function RightPanel({ drive, knobSize }: Props) {
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>驱动 · Motion</Text>
 
-      <View style={styles.modeRow}>
+      {/* segmented mode tabs */}
+      <View style={styles.tabs}>
         {MODES.map((m) => {
           const active = m.id === mode;
           return (
@@ -42,12 +44,9 @@ export function RightPanel({ drive, knobSize }: Props) {
                 setMode(m.id);
                 Haptics.selectionAsync().catch(() => {});
               }}
-              style={[styles.modeBtn, active && styles.modeActive]}
+              style={[styles.tab, active && styles.tabActive]}
             >
-              <Text style={[styles.modeIcon, active && styles.modeTextActive]}>
-                {m.icon}
-              </Text>
-              <Text style={[styles.modeLabel, active && styles.modeTextActive]}>
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
                 {m.label}
               </Text>
             </Pressable>
@@ -55,8 +54,12 @@ export function RightPanel({ drive, knobSize }: Props) {
         })}
       </View>
 
-      <View style={styles.knobWrap}>
-        <RotaryKnob size={knobSize} drive={drive} enabled={mode === 'knob'} />
+      <View style={styles.stage}>
+        {mode === 'knob' ? (
+          <RotaryKnob size={knobSize} drive={drive} enabled />
+        ) : (
+          <MotionIllustration kind={mode} size={knobSize} />
+        )}
       </View>
 
       <Text style={styles.hint}>{HINT[mode]}</Text>
@@ -78,29 +81,29 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     alignSelf: 'flex-start',
   },
-  modeRow: {
+  tabs: {
     flexDirection: 'row',
-    gap: theme.space(2),
     width: '100%',
-    justifyContent: 'center',
+    padding: 3,
+    borderRadius: theme.radius.sm + 3,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: theme.colors.panelBorder,
   },
-  modeBtn: {
+  tab: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: theme.space(2),
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    gap: 2,
+    borderRadius: theme.radius.sm,
   },
-  modeActive: {
+  tabActive: {
     backgroundColor: theme.colors.active,
+    borderWidth: 1,
     borderColor: theme.colors.accentGlow,
   },
-  modeIcon: { color: theme.colors.textDim, fontSize: 20 },
-  modeLabel: { color: theme.colors.textDim, fontSize: theme.font.tiny },
-  modeTextActive: { color: theme.colors.text, fontWeight: '600' },
-  knobWrap: { alignItems: 'center', justifyContent: 'center', flex: 1 },
+  tabLabel: { color: theme.colors.textDim, fontSize: theme.font.label },
+  tabLabelActive: { color: theme.colors.text, fontWeight: '600' },
+  stage: { alignItems: 'center', justifyContent: 'center', flex: 1 },
   hint: {
     color: theme.colors.textFaint,
     fontSize: theme.font.tiny,

@@ -42,19 +42,22 @@ const atlasShader = loadAtlas('atlas.png');
 const matShader = loadAtlas('atlas-mat.png');
 
 // --- settle a deterministic pile with a tiny gravity sim ---------------------
-function settlePile(n, seed, gravAngle) {
+// mirrors 3/4/6 → polygonal chamber (closed mirror tube), else circular
+function settlePile(n, seed, gravAngle, mirrors = 0) {
   let s = seed;
   const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   const gx = Math.sin(gravAngle), gy = Math.cos(gravAngle);
+  const poly = mirrors === 3 || mirrors === 4 || mirrors === 6;
+  const inR = poly ? Math.cos(Math.PI / mirrors) : 1;
   const bodies = [];
   for (let i = 0; i < n; i++) {
     const it = items[Math.floor(rnd() * items.length)];
     bodies.push({
       it,
-      x: (rnd() - 0.5) * 1.4, y: (rnd() - 0.5) * 1.4,
+      x: (rnd() - 0.5) * 1.2 * inR, y: (rnd() - 0.5) * 1.2 * inR,
       vx: 0, vy: 0,
       angle: rnd() * TAU,
-      size: (0.20 + 0.14 * (it.size || 1)) * (0.49 + 0.111 * (1 + rnd() * 9)),
+      size: (0.115 + 0.075 * (it.size || 1)) * (0.49 + 0.111 * (1 + rnd() * 9)),
       squash: 0.55 + rnd() * 0.45,
       facing: rnd() < 0.5 ? 1 : -1,
     });
@@ -65,12 +68,25 @@ function settlePile(n, seed, gravAngle) {
       p.vx = (p.vx + gx * 2.1 * dt) * 0.97;
       p.vy = (p.vy + gy * 2.1 * dt) * 0.97;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      const d = Math.hypot(p.x, p.y);
-      const lim = 0.97 - p.size * 0.32;
-      if (d > lim) {
-        p.x = (p.x / d) * lim; p.y = (p.y / d) * lim;
-        const vn = (p.vx * p.x + p.vy * p.y) / lim;
-        p.vx -= 1.1 * vn * (p.x / lim); p.vy -= 1.1 * vn * (p.y / lim);
+      if (poly) {
+        for (let e = 0; e < mirrors; e++) {
+          const aw = Math.PI / 2 + (TAU * e) / mirrors;
+          const nx = Math.cos(aw), ny = Math.sin(aw);
+          const pen = p.x * nx + p.y * ny - (inR - p.size * 0.32);
+          if (pen > 0) {
+            p.x -= nx * pen; p.y -= ny * pen;
+            const vn = p.vx * nx + p.vy * ny;
+            if (vn > 0) { p.vx -= 1.1 * vn * nx; p.vy -= 1.1 * vn * ny; }
+          }
+        }
+      } else {
+        const d = Math.hypot(p.x, p.y);
+        const lim = 0.97 - p.size * 0.32;
+        if (d > lim) {
+          p.x = (p.x / d) * lim; p.y = (p.y / d) * lim;
+          const vn = (p.vx * p.x + p.vy * p.y) / lim;
+          p.vx -= 1.1 * vn * (p.x / lim); p.vy -= 1.1 * vn * (p.y / lim);
+        }
       }
     }
     for (let i = 0; i < n; i++) {
@@ -95,9 +111,12 @@ function packUniforms(bodies) {
   const fpos = new Array(MAX * 4).fill(0);
   const fuv = new Array(MAX * 4).fill(0);
   const fmat = new Array(MAX * 4).fill(0);
+  const frot = new Array(MAX * 2).fill(0);
   bodies.forEach((p, i) => {
     fpos[i * 4] = p.x; fpos[i * 4 + 1] = p.y;
     fpos[i * 4 + 2] = p.angle; fpos[i * 4 + 3] = p.size;
+    frot[i * 2] = Math.cos(p.angle) / p.size;
+    frot[i * 2 + 1] = -Math.sin(p.angle) / p.size;
     fuv[i * 4] = p.it.uv[0]; fuv[i * 4 + 1] = p.it.uv[1];
     fuv[i * 4 + 2] = p.it.uv[2]; fuv[i * 4 + 3] = p.it.uv[3];
     fmat[i * 4] = p.it.matType ?? 3;
@@ -105,12 +124,12 @@ function packUniforms(bodies) {
     fmat[i * 4 + 2] = p.squash;
     fmat[i * 4 + 3] = p.facing;
   });
-  return { fpos, fuv, fmat, count: bodies.length };
+  return { fpos, fuv, fmat, frot, count: bodies.length };
 }
 
-function renderCell(size, pile, lightRot) {
-  const { fpos, fuv, fmat, count } = packUniforms(pile);
-  const uniforms = [size, size, count, lightRot, ...fpos, ...fuv, ...fmat];
+function renderCell(size, pile, lightRot, shape = 0) {
+  const { fpos, fuv, fmat, frot, count } = packUniforms(pile);
+  const uniforms = [size, size, count, lightRot, shape, ...fpos, ...fuv, ...fmat, ...frot];
   const shader = cellEffect.makeShaderWithChildren(uniforms, [atlasShader, matShader]);
   const surface = CanvasKit.MakeSurface(size, size);
   const canvas = surface.getCanvas();
@@ -154,8 +173,9 @@ const sheet = CanvasKit.MakeSurface(SIZE * cols.length, SIZE);
 const sheetCanvas = sheet.getCanvas();
 sheetCanvas.clear(CanvasKit.Color(5, 6, 10, 255));
 cols.forEach((m, i) => {
-  const pile = settlePile(20, 7 + i, ROT);
-  const cellImg = renderCell(SIZE, pile, LIGHT);
+  const shape = m === 3 || m === 4 || m === 6 ? m : 0;
+  const pile = settlePile(28, 7 + i, ROT, m);
+  const cellImg = renderCell(SIZE, pile, LIGHT, shape);
   const view = renderView(SIZE, cellImg, m, ROT);
   sheetCanvas.drawImage(view, i * SIZE, 0);
   view.delete(); cellImg.delete();
@@ -181,7 +201,8 @@ const sweep = CanvasKit.MakeSurface(SW * sweepRots.length, SW);
 const sweepCanvas = sweep.getCanvas();
 sweepCanvas.clear(CanvasKit.Color(5, 6, 10, 255));
 sweepRots.forEach((r, i) => {
-  const pile = settlePile(16, 21, r);            // pile resettles as the cell turns
+  const pile = settlePile(8, 21, r);             // SPARSE pile = the hard case:
+  // settled shards hug the wall, so the view must still find them at every angle
   const cellImg = renderCell(SW, pile, 2.2 - r);
   const view = renderView(SW, cellImg, 8, r);    // 8 mirrors = narrowest wedge
   sweepCanvas.drawImage(view, i * SW, 0);
@@ -192,9 +213,19 @@ const sweepImg = sweep.makeImageSnapshot();
 writeFileSync(join(OUT, 'rotation-sweep.png'), Buffer.from(sweepImg.encodeToBytes(CanvasKit.ImageFormat.PNG, 95)));
 console.log('wrote preview/rotation-sweep.png');
 
-// --- one large detail view ----------------------------------------------------
-const detailCell = renderCell(900, settlePile(22, 11, ROT), LIGHT);
-const detail = renderView(900, detailCell, 6, ROT);
+// --- one shard in a closed triangular tube: the infinite-regress depth test ---
+const singleCell = renderCell(900, settlePile(1, 5, ROT, 3), LIGHT, 3);
+const single = renderView(900, singleCell, 3, ROT);
+const singleSurf = CanvasKit.MakeSurface(900, 900);
+singleSurf.getCanvas().clear(CanvasKit.Color(5, 6, 10, 255));
+singleSurf.getCanvas().drawImage(single, 0, 0);
+singleSurf.flush();
+writeFileSync(join(OUT, 'single.png'), Buffer.from(singleSurf.makeImageSnapshot().encodeToBytes(CanvasKit.ImageFormat.PNG, 95)));
+console.log('wrote preview/single.png');
+
+// --- one large detail view (closed triangular tube — nothing ever vanishes) ---
+const detailCell = renderCell(900, settlePile(22, 11, ROT, 3), LIGHT, 3);
+const detail = renderView(900, detailCell, 3, ROT);
 const detailSurf = CanvasKit.MakeSurface(900, 900);
 detailSurf.getCanvas().clear(CanvasKit.Color(5, 6, 10, 255));
 detailSurf.getCanvas().drawImage(detail, 0, 0);

@@ -49,7 +49,10 @@ export function KaleidoscopeCanvas({ size, drive }: Props) {
 
   const atlas = useImage(FRAGMENT_ATLAS);
   const matAtlas = useImage(FRAGMENT_ATLAS_MAT);
-  const cell = usePhysics(fragments, drive, chamber);
+  const cell = usePhysics(fragments, drive, chamber, mirrors);
+
+  // 3/4/6 mirrors form a closed polygonal tube; the chamber is the polygon
+  const shape = mirrors === 3 || mirrors === 4 || mirrors === 6 ? mirrors : 0;
 
   const cellUniforms = useDerivedValue(() => ({
     u_resolution: [size, size],
@@ -57,9 +60,11 @@ export function KaleidoscopeCanvas({ size, drive }: Props) {
     // the key light is fixed in the world, so it counter-rotates in the
     // chamber frame — highlights sweep across the shards as the tube turns
     u_lightRot: LIGHT_AZIMUTH - drive.rotation.value,
+    u_shape: shape,
     u_fpos: cell.value.fpos,
     u_fuv: cell.value.fuv,
     u_fmat: cell.value.fmat,
+    u_frot: cell.value.frot,
   }));
 
   // NOTE: the layer image filter runs in dp (the density CTM is applied when
@@ -99,11 +104,5 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: '#000',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.10)',
-    shadowColor: '#b69cff',
-    shadowOpacity: 0.35,
-    shadowRadius: 40,
-    shadowOffset: { width: 0, height: 0 },
   },
 });

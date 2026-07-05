@@ -28,9 +28,12 @@ export const CELL_SKSL = `
 uniform float2 u_resolution;        // pass-1 canvas size
 uniform float  u_count;             // number of active fragments
 uniform float  u_lightRot;          // key-light azimuth in the chamber frame
+uniform float  u_shape;             // chamber wall: 0 = circle, 3/4/6 = polygon
 uniform float4 u_fpos[${MAX_FRAGMENTS}];  // x,y (disc space), angle, size
 uniform float4 u_fuv[${MAX_FRAGMENTS}];   // atlas rect: x,y,w,h (px)
 uniform float4 u_fmat[${MAX_FRAGMENTS}];  // material, opacity, squash, facing
+uniform float2 u_frot[${MAX_FRAGMENTS}];  // (cos −θ, sin −θ)/size, precomputed
+                                          // on the CPU — no per-pixel trig
 uniform shader u_atlas;             // colour atlas (premultiplied)
 uniform shader u_matlas;            // material atlas: RG=normal, B=thickness
 
@@ -55,14 +58,18 @@ half4 main(float2 fragCoord) {
     float4 fp = u_fpos[i];
     float sz = fp.w;
     if (sz <= 0.0) continue;
+    float2 d = p - fp.xy;
+    // cheap bounding-box reject before any rotation math — most pixels leave
+    // the loop here for most shards
+    if (abs(d.x) > sz * 0.75 || abs(d.y) > sz * 0.75) continue;
     float4 fm = u_fmat[i];                    // x: material, y: opacity, z: squash, w: facing
     float squash = max(fm.z, 0.15);
 
-    float2 d = p - fp.xy;
-    float c = cos(-fp.z), s = sin(-fp.z);
-    float2 l = float2(c * d.x - s * d.y, s * d.x + c * d.y) / sz;
+    float2 rt = u_frot[i];                    // rotation+scale, baked on the CPU
+    float2 l = float2(rt.x * d.x - rt.y * d.y, rt.y * d.x + rt.x * d.y);
     l.y /= squash;                            // 3D tumble foreshortening
     if (abs(l.x) >= 0.5 || abs(l.y) >= 0.5) continue;
+    float c = rt.x * sz, s = rt.y * sz;       // unit rotation, for normals below
     float2 q = l + 0.5;
     if (fm.w < 0.0) q.x = 1.0 - q.x;          // shard shows its back face
     float4 rect = u_fuv[i];
@@ -127,7 +134,19 @@ half4 main(float2 fragCoord) {
   }
 
   // Shallow chamber dish: the wall shades the very edge of the cell.
-  col *= 1.0 - 0.45 * smoothstep(0.84, 1.02, r);
+  if (u_shape > 0.5) {
+    // polygonal tube wall (closed-mirror chambers)
+    float sIn = cos(3.14159265 / u_shape);
+    float md = -1e3;
+    for (int j = 0; j < 6; j++) {
+      if (float(j) >= u_shape) break;
+      float aw = 3.14159265 * 0.5 + TAU * float(j) / u_shape;
+      md = max(md, dot(p, float2(cos(aw), sin(aw))) - sIn);
+    }
+    col *= 1.0 - 0.45 * smoothstep(-0.12, 0.03, md);
+  } else {
+    col *= 1.0 - 0.45 * smoothstep(0.84, 1.02, r);
+  }
 
   col = clamp(col, 0.0, 4.0);
   return half4(half3(sqrt(col)), 1.0);        // gamma-2 encode for pass 2
@@ -141,7 +160,9 @@ uniform float  u_rotation;          // chamber rotation (radians)
 uniform shader image;               // pass-1 object cell (sqrt-encoded)
 
 const float TAU = 6.28318530718;
-const float OBJ = 1.78;             // view radius 0.5 → cell radius ~0.95
+const float PI = 3.14159265359;
+const float OBJ = 1.0;              // 2-mirror mode: view radius 0.5 → ~0.55 reach
+const float POLY_VIEW = 4.6;        // closed-tube mode: aperture spans ~2.5 tile rings
 
 half3 cellAt(float2 cp) {
   float m = 0.5 * min(u_resolution.x, u_resolution.y);
@@ -157,29 +178,78 @@ half4 main(float2 fragCoord) {
   // Eyepiece barrel distortion — straight seams bow very slightly at the edge.
   float2 uvd = uv * (1.0 + 0.30 * r2);
 
-  // Fold into the fundamental wedge of D_N and count real mirror bounces.
-  float seg = TAU / u_mirrors;
-  float hw = seg * 0.5;
-  float a = atan(uvd.y, uvd.x) + u_rotation;
-  float am = mod(a, TAU);
-  float widx = floor(am / hw);                     // wedge index 0..2N-1
-  float k = min(widx, 2.0 * u_mirrors - widx);     // bounces to reach this wedge
-  float la = mod(a, seg);
-  float af = la > hw ? seg - la : la;
-  float rr = length(uvd) * OBJ;
-  // Rotating-cell scope: the mirrors and eye stay fixed while the CELL turns,
-  // so the sampled wedge always looks at world-down in cell coordinates —
-  // straight into the pile wherever gravity has settled it. Without this the
-  // wedge is glued to a fixed cell sector and most rotations show empty glass.
-  float ws = 0.5 * 3.14159265 - u_rotation - hw * 0.5;
-  float2 pc = float2(cos(af + ws), sin(af + ws)) * rr;
+  float2 pc;        // cell-space sample point
+  float k = 0.0;    // number of mirror bounces to reach this pixel
+  float seam = 0.0; // darkening where mirror plates meet
+
+  bool tiles = u_mirrors < 4.5 || abs(u_mirrors - 6.0) < 0.5;
+  if (tiles) {
+    // CLOSED MIRROR TUBE (3/4/6): the mirrors form a polygonal prism and the
+    // chamber IS the polygon, so reflections tile the whole plane — every
+    // shard inside is always visible somewhere. The tube (mirrors + cell)
+    // rotates rigidly with the knob while gravity tumbles the shards inside.
+    float N = u_mirrors;
+    float sIn = cos(PI / N);          // polygon inradius (circumradius 1)
+    float c = cos(-u_rotation), s0 = sin(-u_rotation);
+    float2 p = float2(c * uvd.x - s0 * uvd.y, s0 * uvd.x + c * uvd.y) * POLY_VIEW;
+    // edge normals are constants for a given mirror set — build them once,
+    // never inside the fold loop (per-pixel trig there was the frame killer)
+    float2 nrm[6];
+    for (int j = 0; j < 6; j++) {
+      float a = PI * 0.5 + TAU * float(j) / N;
+      nrm[j] = float(j) < N ? float2(cos(a), sin(a)) : float2(0.0);
+    }
+    // kaleidoscopic fold: reflect across the edge planes until inside. Each
+    // reflection also accumulates a tiny plate-gap error — real mirror tubes
+    // are never perfectly seated, so deep reflections drift progressively out
+    // of register. Most pixels are folded after 3–4 passes → early exit.
+    for (int it = 0; it < 12; it++) {
+      float moved = 0.0;
+      for (int j = 0; j < 6; j++) {
+        if (float(j) >= N) break;
+        float dj = dot(p, nrm[j]) - sIn;
+        if (dj > 0.0) { p -= (2.0 * dj + 0.005) * nrm[j]; k += 1.0; moved = 1.0; }
+      }
+      if (moved < 0.5) break;
+    }
+    pc = p;
+    float md = -1e3;
+    for (int j = 0; j < 6; j++) {
+      if (float(j) >= N) break;
+      md = max(md, dot(p, nrm[j]) - sIn);
+    }
+    seam = smoothstep(0.030, 0.006, -md);
+  } else {
+    // TWO-MIRROR ROSETTE (5/8): only a wedge of the cell is live. The mirrors
+    // and eyepiece are FIXED; the sampled wedge tracks world-down in cell
+    // coords (rotating-cell scope) and its origin sits partway down the cell,
+    // aimed at the resting pile.
+    float seg = TAU / u_mirrors;
+    float hw = seg * 0.5;
+    float a = atan(uvd.y, uvd.x);
+    float am = mod(a, TAU);
+    float widx = floor(am / hw);                   // wedge index 0..2N-1
+    k = min(widx, 2.0 * u_mirrors - widx);         // bounces to reach this wedge
+    float la = mod(a, seg);
+    float af = la > hw ? seg - la : la;
+    float rr = length(uvd) * OBJ;
+    float ws = 0.5 * PI - u_rotation - hw * 0.5;
+    float dAng = ws + hw * 0.5;                    // world-down in cell coords
+    pc = float2(cos(af + ws), sin(af + ws)) * rr
+       + float2(cos(dAng), sin(dAng)) * 0.55;
+    float seamD = min(af, hw - af) * max(rr, 0.06);
+    seam = smoothstep(0.012, 0.002, seamD);
+  }
 
   // Edge defocus: jitter-rotated taps melt into a soft focus. Chromatic
   // aberration is applied as a differential anchored to that soft base, so a
   // hard dark/bright edge fringes gently instead of flashing full-saturation
   // green/magenta pixels (jagged low-res sprites made raw CA speckle).
+  // blur radius lives in cell units, so scale it by the view reach to keep the
+  // on-screen softness consistent between the two optical models
   float ca = 1.0 + 0.006 * r2;
-  float blur = 0.0025 + 0.008 * smoothstep(0.30, 0.50, radius);
+  float blur = (0.0025 + 0.008 * smoothstep(0.30, 0.50, radius))
+             * (tiles ? POLY_VIEW : OBJ);
   float ja = fract(sin(dot(fragCoord, float2(41.717, 289.31))) * 21753.7) * TAU;
   float2 j1 = float2(cos(ja), sin(ja)) * blur;
   float2 j2 = float2(-j1.y, j1.x);
@@ -192,20 +262,24 @@ half4 main(float2 fragCoord) {
   col.r += (cellAt(pc * ca).r - col.r) * 0.55;
   col.b += (cellAt(pc / ca).b - col.b) * 0.55;
 
-  // Mirror attenuation: every bounce loses a little light, drifting slightly
-  // cool — far wedges are visibly a touch dimmer, like a real mirror system.
-  col *= pow(half3(0.945, 0.962, 0.952), half3(half(k)));
+  // Mirror attenuation: every bounce loses real light and drifts cool — the
+  // direct view is brightest, first reflections a touch dimmer, reflections
+  // of reflections visibly darker. This depth hierarchy is what makes a
+  // closed tube read as an infinite regress rather than printed wallpaper.
+  col *= pow(half3(0.90, 0.945, 0.925), half3(half(min(k, 8.0))));
 
   // Mirror seams: thin DARK lines where the plates meet (never bright).
-  float seamD = min(af, hw - af) * max(rr, 0.06);
-  col *= 1.0 - 0.5 * half(smoothstep(0.012, 0.002, seamD));
+  col *= 1.0 - 0.5 * half(seam);
 
   // Tube vignette + circular aperture with a soft edge.
   col *= half(mix(1.0, 0.55, smoothstep(0.18, 0.50, radius)));
   float ap = smoothstep(0.500, 0.486, radius);
 
   // Filmic-ish shoulder keeps glints glowing without clipping, then gamma.
-  float3 tone = 1.0 - exp(-float3(col) * 1.5);
+  // The max() guard matters: half-precision rounding can leave 1-exp(-x)
+  // microscopically NEGATIVE on dark pixels, and pow(<0) is NaN — which 8-bit
+  // output turns into full-brightness single-channel speckle.
+  float3 tone = max(1.0 - exp(-float3(col) * 1.5), 0.0);
   half3 outc = half3(pow(tone, float3(0.4545)));
 
   // A breath of grain so smooth gradients never band.

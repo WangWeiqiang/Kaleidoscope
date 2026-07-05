@@ -36,7 +36,7 @@ function getIndex(fx, name) {
 
 // name → uniforms the app is expected to set
 const PASSES = {
-  CELL_SKSL: ['u_resolution', 'u_count', 'u_lightRot', 'u_fpos', 'u_fuv', 'u_fmat'],
+  CELL_SKSL: ['u_resolution', 'u_count', 'u_lightRot', 'u_shape', 'u_fpos', 'u_fuv', 'u_fmat', 'u_frot'],
   VIEW_SKSL: ['u_resolution', 'u_mirrors', 'u_rotation'],
 };
 

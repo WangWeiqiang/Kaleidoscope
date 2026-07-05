@@ -23,9 +23,15 @@ interface Props {
   enabled: boolean;
 }
 
-const MAX_SPIN = 14; // rad/s clamp
+const GEAR = 0.45;      // finger angle → chamber angle (geared down for finesse)
+const MAX_COAST = 4.5;  // rad/s the chamber may coast at after release
 
-/** A weighty rotary dial. Fling it to spin the chamber; it coasts on release. */
+/**
+ * A weighty rotary dial. While the finger is down the chamber tracks it
+ * directly through a reduction gear (precise, no lag); on release it coasts
+ * with the flick velocity, clamped so a light swipe never spins the pattern
+ * through multiple turns.
+ */
 export function RotaryKnob({ size, drive, enabled }: Props) {
   const r = size / 2;
 
@@ -46,6 +52,7 @@ export function RotaryKnob({ size, drive, enabled }: Props) {
   // gesture state
   const prevAngle = useSharedValue(0);
   const prevT = useSharedValue(0);
+  const velEst = useSharedValue(0); // low-passed release velocity
 
   const pan = Gesture.Pan()
     .enabled(enabled)
@@ -53,6 +60,8 @@ export function RotaryKnob({ size, drive, enabled }: Props) {
       'worklet';
       prevAngle.value = Math.atan2(e.y - r, e.x - r);
       prevT.value = Date.now();
+      velEst.value = 0;
+      drive.spin.value = 0; // grabbing the dial stops any coasting
     })
     .onUpdate((e) => {
       'worklet';
@@ -62,12 +71,19 @@ export function RotaryKnob({ size, drive, enabled }: Props) {
       d = Math.atan2(Math.sin(d), Math.cos(d));
       const now = Date.now();
       const dt = Math.max((now - prevT.value) / 1000, 1 / 240);
-      let vel = d / dt;
-      if (vel > MAX_SPIN) vel = MAX_SPIN;
-      if (vel < -MAX_SPIN) vel = -MAX_SPIN;
-      drive.spin.value = vel;
+      // the chamber tracks the finger directly through the reduction gear
+      const dc = d * GEAR;
+      drive.rotation.value += dc;
+      drive.churn.value += Math.abs(dc) * 0.6;
+      velEst.value = velEst.value * 0.75 + (dc / dt) * 0.25;
       prevAngle.value = ang;
       prevT.value = now;
+    })
+    .onEnd(() => {
+      'worklet';
+      // a flick lets the dial coast briefly; a slow turn stops dead
+      const v = velEst.value;
+      drive.spin.value = Math.max(-MAX_COAST, Math.min(MAX_COAST, v));
     });
 
   // knob graphic shares the chamber rotation so dial and pattern move together

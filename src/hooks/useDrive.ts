@@ -8,7 +8,7 @@ import {
 
 import type { DriveMode } from '@/state/store';
 
-const FRICTION = 1.2;     // knob spin decay per second (coasts, then stops)
+const FRICTION = 2.4;     // knob spin decay per second (coasts briefly, then stops)
 const STOP_EPS = 0.02;    // below this angular speed we consider it stopped
 const CHURN_GAIN = 2.2;   // how fast motion rearranges the fragments
 const SENSOR_HZ = 60;
